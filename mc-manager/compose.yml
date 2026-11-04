@@ -1,0 +1,61 @@
+services:
+
+  mc-manager-db:
+    image: mariadb:latest
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+
+    restart: no
+    ports:
+      - 3306:3306
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - mc-manager-net
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  mc-manager-backend:
+    build: backend
+    restart: no
+    environment:
+      - MYSQL_HOST=${MYSQL_SERVICE_ALIAS}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - AUTH0_DOMAIN=${AUTH0_DOMAIN}
+      - AUTH0_CLIENT_ID=${VITE_AUTH0_CLIENT_ID}
+      - AUTH0_AUDIENCE=${VITE_AUTH0_AUDIENCE}
+    networks:
+      - mc-manager-net
+    ports:
+      - 8080:8080
+    depends_on:
+      mc-manager-db:
+        condition: service_healthy
+  mc-manager-frontend:
+    build:
+      context: frontend
+      target: development
+    ports:
+      - 5173:5173 
+    volumes:
+      - ./frontend/src:/code/src
+      - /project/node_modules
+    networks:
+      - mc-manager-net
+    depends_on:
+      - mc-manager-backend
+    environment:
+      VITE_AUTH0_DOMAIN: ${VITE_AUTH0_DOMAIN}
+      VITE_AUTH0_CLIENT_ID: ${VITE_AUTH0_CLIENT_ID}
+      VITE_AUTH0_AUDIENCE: ${VITE_AUTH0_AUDIENCE}
+      VITE_BACKEND_URL: ${VITE_BACKEND_URL}
+      VITE_APP_NAME: ${VITE_APP_NAME}
+
+volumes:
+  db-data: {}
+networks:
+  mc-manager-net: {}
