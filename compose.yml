@@ -1,0 +1,42 @@
+services:
+  minecraft-manager:
+    build: .
+    container_name: minecraft-manager
+    restart: unless-stopped
+
+    user: "10001:10001"
+
+    group_add:
+      - "${DOCKER_GID}"
+
+    environment:
+      MANAGER_TOKEN: "${MANAGER_TOKEN}"
+      MC_SERVER_PATH: "${MC_SERVER_PATH}"
+      HOME: /tmp
+      DOCKER_CONFIG: /tmp/.docker
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${MC_SERVER_PATH}:${MC_SERVER_PATH}:ro
+
+    networks:
+      - minecraft-control
+
+    read_only: true
+
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+
+    cap_drop:
+      - ALL
+
+    security_opt:
+      - no-new-privileges:true
+
+    mem_limit: 128m
+    pids_limit: 64
+
+networks:
+  minecraft-control:
+    name: minecraft-control
+    external: true
