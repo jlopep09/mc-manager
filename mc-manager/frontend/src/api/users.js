@@ -20,3 +20,19 @@ export async function syncUser(accessToken, email, username) {
 
     return response.json();
 }
+
+export async function getUserData(accessToken) {
+
+    const response = await fetch(`${API_URL}/v1/users/data`, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Error al recuperar los datos del usuario: " + response.status);
+    }
+
+    return response.json();
+}

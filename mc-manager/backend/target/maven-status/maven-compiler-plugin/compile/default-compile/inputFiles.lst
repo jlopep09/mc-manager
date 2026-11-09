@@ -1,12 +1,11 @@
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\repository\UserRepository.java
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\SecurityConfig.java
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\configuration\DockerSecretsProcessor.java
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\controllers\UserController.java
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\entity\Role.java
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\repository\HeroesRepository.java
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\CorsConfig.java
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\Application.java
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\controllers\HeroesController.java
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\entity\User.java
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\entity\Hero.java
-C:\Users\ChispyDev\Desktop\Nueva carpeta (2)\PracticandoJava\backend\src\main\java\com\joselp\practJava\controllers\HomeController.java
+D:\repositorios\mc-manager\mc-manager\backend\src\main\java\com\joselp\practJava\entity\UserRole.java
+D:\repositorios\mc-manager\mc-manager\backend\src\main\java\com\joselp\practJava\entity\User.java
+D:\repositorios\mc-manager\mc-manager\backend\src\main\java\com\joselp\practJava\entity\Role.java
+D:\repositorios\mc-manager\mc-manager\backend\src\main\java\com\joselp\practJava\controllers\HomeController.java
+D:\repositorios\mc-manager\mc-manager\backend\src\main\java\com\joselp\practJava\Application.java
+D:\repositorios\mc-manager\mc-manager\backend\src\main\java\com\joselp\practJava\controllers\UserController.java
+D:\repositorios\mc-manager\mc-manager\backend\src\main\java\com\joselp\practJava\CorsConfig.java
+D:\repositorios\mc-manager\mc-manager\backend\src\main\java\com\joselp\practJava\configuration\DockerSecretsProcessor.java
+D:\repositorios\mc-manager\mc-manager\backend\src\main\java\com\joselp\practJava\dto\UserDataDTO.java
+D:\repositorios\mc-manager\mc-manager\backend\src\main\java\com\joselp\practJava\repository\UserRepository.java
+D:\repositorios\mc-manager\mc-manager\backend\src\main\java\com\joselp\practJava\SecurityConfig.java

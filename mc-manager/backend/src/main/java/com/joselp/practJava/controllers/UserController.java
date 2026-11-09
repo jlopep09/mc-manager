@@ -1,7 +1,10 @@
 package com.joselp.practJava.controllers;
 
+import com.joselp.practJava.dto.UserDataDTO;
 import com.joselp.practJava.entity.User;
+import com.joselp.practJava.entity.UserRole;
 import com.joselp.practJava.repository.UserRepository;
+import com.joselp.practJava.repository.UserRoleRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,16 +20,26 @@ import java.util.Optional;
 public class UserController {
 
     private final UserRepository repository;
+    private final UserRoleRepository userRoleRepository;
 
-    public UserController(UserRepository repository) {
+    public UserController(UserRepository repository, UserRoleRepository userRoleRepository) {
         this.repository = repository;
+        this.userRoleRepository = userRoleRepository;
     }
 
 
-    @GetMapping
-    public ResponseEntity<Optional<User>> getUserByEmail(@RequestParam String userEmail){
-        Optional<User> user = repository.findByEmail(userEmail);
-        return ResponseEntity.status(HttpStatus.FOUND).body(user);
+    @GetMapping("/data")
+    public ResponseEntity<UserDataDTO> getUserData(@AuthenticationPrincipal Jwt jwt){
+        String externalId = jwt.getClaimAsString("sub");
+        UserDataDTO result = new UserDataDTO();
+        Optional<User> user = repository.findByExternalId(externalId);
+        if (user.isPresent()){
+            boolean hasAdminRole;
+            Optional<UserRole> userRole = userRoleRepository.findByUser_IdAndRole_Name(user.get().getId(), "admin");
+            hasAdminRole = userRole.isPresent();
+            result = new UserDataDTO(user.get().getEmail(), user.get().getUsername(), hasAdminRole);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
 

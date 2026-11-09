@@ -8,7 +8,7 @@ const Footer = () => {
     <p className='flex'>
         <a className='text-accent' href="https://www.youtube.com/channel/UCGJGaakyDW8POp07m23smcA">@ChispyDev</a>
         <span className='mx-2'>-</span>
-        <a className='text-secondary' href="https://github.com/jlopep09/PracticandoJava">Github</a>
+        <a className='text-secondary' href="https://github.com/jlopep09/mc-manager">Github</a>
         
     </p>
   </aside>

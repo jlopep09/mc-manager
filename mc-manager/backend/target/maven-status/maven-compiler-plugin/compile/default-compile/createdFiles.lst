@@ -1,8 +1,10 @@
-com\joselp\practJava\controllers\UserController.class
+com\joselp\practJava\dto\UserDataDTO.class
 com\joselp\practJava\entity\User.class
 com\joselp\practJava\Application.class
+com\joselp\practJava\entity\UserRole.class
+com\joselp\practJava\SecurityConfig.class
+com\joselp\practJava\controllers\UserController.class
 com\joselp\practJava\controllers\HomeController.class
 com\joselp\practJava\repository\UserRepository.class
 com\joselp\practJava\CorsConfig.class
-com\joselp\practJava\SecurityConfig.class
 com\joselp\practJava\configuration\DockerSecretsProcessor.class

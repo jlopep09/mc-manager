@@ -30,6 +30,7 @@ services:
       - AUTH0_AUDIENCE=${VITE_AUTH0_AUDIENCE}
     networks:
       - mc-manager-net
+      - minecraft-control
     ports:
       - 8080:8080
     depends_on:
@@ -59,3 +60,6 @@ volumes:
   db-data: {}
 networks:
   mc-manager-net: {}
+  minecraft-control:
+    name: minecraft-control
+    external: true
