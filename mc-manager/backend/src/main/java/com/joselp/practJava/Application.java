@@ -3,10 +3,12 @@ package com.joselp.practJava;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @EnableAutoConfiguration
+@ConfigurationPropertiesScan
 @ComponentScan(basePackages = {"com.joselp.practJava"})
 public class Application {
 

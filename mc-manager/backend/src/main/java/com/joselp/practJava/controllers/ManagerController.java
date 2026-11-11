@@ -1,17 +1,18 @@
 package com.joselp.practJava.controllers;
 
+import com.joselp.practJava.configuration.MinecraftManagerProperties;
+import com.joselp.practJava.dto.ServiceOnOffDTO;
 import com.joselp.practJava.dto.ServiceStatusDTO;
 
 import com.joselp.practJava.entity.UserRole;
 import com.joselp.practJava.repository.UserRoleRepository;
 import com.nimbusds.jwt.JWT;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import org.springframework.http.*;
@@ -20,13 +21,104 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+
+
 @RestController
 @RequestMapping("/v1/manager")
 public class ManagerController {
 
-    private UserRoleRepository userRoleRepository;
-    public ManagerController(UserRoleRepository userRoleRepository){
+    private final UserRoleRepository userRoleRepository;
+    private final MinecraftManagerProperties managerProperties;
+
+    public ManagerController(
+            UserRoleRepository userRoleRepository,
+            MinecraftManagerProperties managerProperties
+    ) {
         this.userRoleRepository = userRoleRepository;
+        this.managerProperties = managerProperties;
+    }
+
+    @PostMapping("/off")
+    public ResponseEntity<ServiceOnOffDTO> changeStatusService_off(@AuthenticationPrincipal Jwt jwt) {
+        ServiceOnOffDTO result = new ServiceOnOffDTO();
+
+        if(jwt == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+        }
+
+        String external_id = jwt.getClaimAsString("sub");
+        Optional<UserRole> userRole =  userRoleRepository.findByUser_ExternalIdAndRole_Name(external_id, "admin");
+
+        if(!userRole.isPresent()){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+        }
+
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(managerProperties.getApiKey());
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                (managerProperties.getUrl() + "/v1/stop"),
+                HttpMethod.POST,
+                request,
+                String.class
+        );
+        String serviceMapData = response.getBody();
+
+        if (serviceMapData == null) {
+            result.setSuccess(false);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        }
+        result.setSuccess(true);
+        result.setIs_online(false);
+        return ResponseEntity.status(response.getStatusCode())
+                .body(result);
+    }
+
+    @PostMapping("/on")
+    public ResponseEntity<ServiceOnOffDTO> changeStatusService_on(@AuthenticationPrincipal Jwt jwt) {
+
+        ServiceOnOffDTO result = new ServiceOnOffDTO();
+
+        if(jwt == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+        }
+
+        String external_id = jwt.getClaimAsString("sub");
+        Optional<UserRole> userRole =  userRoleRepository.findByUser_ExternalIdAndRole_Name(external_id, "admin");
+
+        if(!userRole.isPresent()){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+        }
+
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(managerProperties.getApiKey());
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                (managerProperties.getUrl() + "/v1/start"),
+                HttpMethod.POST,
+                request,
+                String.class
+        );
+        String serviceMapData = response.getBody();
+
+        if (serviceMapData == null) {
+            result.setSuccess(false);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        }
+        result.setSuccess(true);
+        result.setIs_online(true);
+        return ResponseEntity.status(response.getStatusCode())
+                .body(result);
     }
 
 
@@ -47,12 +139,12 @@ public class ManagerController {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth("1b94e573bf367248a6de3b3bedafc291951c74b33550c8dbf09a6c9582afbe5a");
+        headers.setBearerAuth(managerProperties.getApiKey());
 
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         ResponseEntity<Map> response = restTemplate.exchange(
-                "http://minecraft-manager:8080/v1/status",
+                (managerProperties.getUrl() + "/v1/status"),
                 HttpMethod.GET,
                 request,
                 Map.class

@@ -4,7 +4,7 @@ import { getServiceStatus } from '../api/manager';
 import { getUserData } from '../api/users';
 
 
-export function useManagerStatus(lastFetchRequest) {
+export function useManagerStatus(refreshTrigger) {
 
     const [serviceData, setServiceData] = useState();
     const {user, isAuthenticated, getAccessTokenSilently} = useAuth0();
@@ -28,7 +28,7 @@ export function useManagerStatus(lastFetchRequest) {
         getUserDataUseEffect();
 
 
-    },[lastFetchRequest, isAuthenticated, user]
+    },[refreshTrigger, isAuthenticated, user]
 
     );
 

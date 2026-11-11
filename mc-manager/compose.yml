@@ -28,6 +28,7 @@ services:
       - AUTH0_DOMAIN=${AUTH0_DOMAIN}
       - AUTH0_CLIENT_ID=${VITE_AUTH0_CLIENT_ID}
       - AUTH0_AUDIENCE=${VITE_AUTH0_AUDIENCE}
+      - API_MANAGER_TOKEN=${MANAGER_TOKEN}
     networks:
       - mc-manager-net
       - minecraft-control
