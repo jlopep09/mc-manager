@@ -15,7 +15,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"archive/zip"
+    "io"
 )
+
 
 // Información de cada contenedor
 type Container struct {
@@ -130,6 +133,7 @@ func main() {
 
 	token := os.Getenv("MANAGER_TOKEN")
 	projectDir := os.Getenv("MC_SERVER_PATH")
+	backupDir := os.Getenv("MC_BACKUP_PATH")
 
 	if len(token) < 32 {
 		log.Fatal("MANAGER_TOKEN must have at least 32 characters")
@@ -137,6 +141,10 @@ func main() {
 
 	if projectDir == "" {
 		log.Fatal("MC_SERVER_PATH must be configured")
+	}
+
+	if backupDir == "" {
+		log.Fatal("MC_BACKUP_PATH must be configured")
 	}
 
 	composeFile := filepath.Join(projectDir, "compose.yml")
@@ -196,6 +204,15 @@ func main() {
 
 			args = []string{"ps", "--format", "json"}
 
+		case "/v1/backup":
+
+			if r.Method != http.MethodPost {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+
+			args = nil
+
 		default:
 			http.NotFound(w, r)
 			return
@@ -210,7 +227,97 @@ func main() {
 			5*time.Minute,
 		)
 		defer cancel()
+		//Si es backup
+		// BACKUP
+		if r.URL.Path == "/v1/backup" {
 
+			// Consultar todos los contenedores, incluidos los detenidos
+			checkArgs := []string{
+				"compose",
+				"--project-directory", projectDir,
+				"-f", composeFile,
+				"ps", "--all", "--format", "json",
+			}
+
+			checkCmd := exec.CommandContext(ctx, "docker", checkArgs...)
+			checkCmd.Dir = projectDir
+
+			checkOutput, err := checkCmd.CombinedOutput()
+
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadGateway)
+
+				json.NewEncoder(w).Encode(Response{
+					Success: false,
+					Error:   string(checkOutput),
+				})
+				return
+			}
+
+			containers, err := parseDockerOutput(string(checkOutput))
+
+			if err != nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+
+				json.NewEncoder(w).Encode(Response{
+					Success: false,
+					Error:   err.Error(),
+				})
+				return
+			}
+
+			// Comprobar que todos los contenedores están detenidos
+			for _, container := range containers {
+
+				state := strings.ToLower(container.Status)
+
+				// Usamos State directamente para comprobar el estado real
+				// (ver la pequeña modificación de estructura más abajo).
+				_ = state
+			}
+
+			for _, container := range containers {
+				state := strings.ToLower(strings.TrimSpace(container.Status))
+
+				if strings.Contains(state, "up") {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusConflict)
+
+					json.NewEncoder(w).Encode(Response{
+						Success: false,
+						Error:   "Minecraft must be stopped before creating a backup",
+					})
+					return
+				}
+			}
+
+			// Crear backup
+			backupFile, err := createBackup(projectDir, backupDir)
+
+			w.Header().Set("Content-Type", "application/json")
+
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+
+				json.NewEncoder(w).Encode(Response{
+					Success: false,
+					Error:   err.Error(),
+				})
+				return
+			}
+
+			json.NewEncoder(w).Encode(Response{
+				Success: true,
+				Output:  backupFile,
+			})
+
+			return
+		}
+
+
+		//Si no es backup
 		commandArgs := append([]string{
 			"compose",
 			"--project-directory", projectDir,
@@ -280,4 +387,130 @@ func main() {
 	log.Println("Minecraft Manager listening on :8080")
 
 	log.Fatal(server.ListenAndServe())
+}
+
+func createBackup(sourceDir, backupDir string) (string, error) {
+
+    if err := os.MkdirAll(backupDir, 0755); err != nil {
+        return "", err
+    }
+
+    date := time.Now().Format("20060102-150405")
+
+    backupFile := filepath.Join(
+        backupDir,
+        "backup-"+date+".zip",
+    )
+
+    tempFile, err := os.CreateTemp(
+        backupDir,
+        ".backup-*.tmp",
+    )
+    if err != nil {
+        return "", err
+    }
+
+    tempPath := tempFile.Name()
+    defer os.Remove(tempPath)
+
+    zipWriter := zip.NewWriter(tempFile)
+
+    backupErr := filepath.WalkDir(
+        sourceDir,
+        func(path string, d os.DirEntry, err error) error {
+
+            if err != nil {
+                return err
+            }
+
+            relativePath, err := filepath.Rel(sourceDir, path)
+            if err != nil {
+                return err
+            }
+
+            relativePath = filepath.ToSlash(relativePath)
+
+            if relativePath == "." {
+                return nil
+            }
+
+            // Excluir BlueMap
+            if relativePath == "ServerVanilla/bluemap" ||
+                strings.HasPrefix(
+                    relativePath,
+                    "ServerVanilla/bluemap/",
+                ) {
+                if d.IsDir() {
+                    return filepath.SkipDir
+                }
+                return nil
+            }
+
+            // No seguir enlaces simbólicos
+            if d.Type()&os.ModeSymlink != 0 {
+                return nil
+            }
+
+            if d.IsDir() {
+                return nil
+            }
+
+            info, err := d.Info()
+            if err != nil {
+                return err
+            }
+
+            if !info.Mode().IsRegular() {
+                return nil
+            }
+
+            header, err := zip.FileInfoHeader(info)
+            if err != nil {
+                return err
+            }
+
+            header.Name = relativePath
+            header.Method = zip.Deflate
+
+            writer, err := zipWriter.CreateHeader(header)
+            if err != nil {
+                return err
+            }
+
+            file, err := os.Open(path)
+            if err != nil {
+                return err
+            }
+
+            _, copyErr := io.Copy(writer, file)
+            closeErr := file.Close()
+
+            if copyErr != nil {
+                return copyErr
+            }
+
+            return closeErr
+        },
+    )
+
+    closeErr := zipWriter.Close()
+    fileCloseErr := tempFile.Close()
+
+    if backupErr != nil {
+        return "", backupErr
+    }
+
+    if closeErr != nil {
+        return "", closeErr
+    }
+
+    if fileCloseErr != nil {
+        return "", fileCloseErr
+    }
+
+    if err := os.Rename(tempPath, backupFile); err != nil {
+        return "", err
+    }
+
+    return backupFile, nil
 }

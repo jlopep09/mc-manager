@@ -1,7 +1,7 @@
 # mc-manager
 Aplicación para la gestión de servidores MC
 Aplicación para la gestión de servidores de MC virtualizados con docker compose. Se aporta a continuación el contenido de el compose para crear el servicio del servidor. Está preparado para buscar los archivos del servidor en la carpeta ./server
-
+![alt text](image.png)
 
 ### compose.yml
 ```compose.yml

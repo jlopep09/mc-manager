@@ -12,12 +12,14 @@ services:
     environment:
       MANAGER_TOKEN: "${MANAGER_TOKEN}"
       MC_SERVER_PATH: "${MC_SERVER_PATH}"
+      MC_BACKUP_PATH: "${MC_BACKUP_PATH}"
       HOME: /tmp
       DOCKER_CONFIG: /tmp/.docker
 
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${MC_SERVER_PATH}:${MC_SERVER_PATH}:ro
+      - ${MC_BACKUP_PATH}:${MC_BACKUP_PATH}
 
     networks:
       - minecraft-control
